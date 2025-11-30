@@ -44,6 +44,28 @@ app.use(express.json());
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!')
+});
+
+app.post('/users',async(req,res)=> {
+    const {name,email}=req.body;
+    try{
+        const result = await pool.query(`
+            INSERT INTO users(name,email) VALUES($1, $2) RETURNING *
+            `, [name,email]);
+
+        console.log(result.rows,result.rowCount);
+        res.status(201).json({
+            success:true,
+            message:"user inserted successfully",
+            data:result.rows[0]
+        })
+    }catch(err:any){
+        console.error("error adding user",err);
+        res.status(500).json({
+            success:false,
+            message: err.detail || "internal server error"
+        })
+    }
 })
 
 app.listen(port, () => {
