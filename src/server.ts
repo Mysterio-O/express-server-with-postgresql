@@ -4,7 +4,7 @@ import { Pool } from 'pg';
 import path from 'path';
 const app = express()
 const port = 5000;
-dotenv.config({path:path.join(process.cwd(),'.env')});
+dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 const pool = new Pool({
     connectionString: `${process.env.CONNECTION_STRING}`
@@ -46,23 +46,79 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!')
 });
 
-app.post('/users',async(req,res)=> {
-    const {name,email}=req.body;
-    try{
+
+
+app.post('/users', async (req: Request, res: Response) => {
+    const { name, email } = req.body;
+    try {
         const result = await pool.query(`
             INSERT INTO users(name,email) VALUES($1, $2) RETURNING *
-            `, [name,email]);
+            `, [name, email]);
 
-        console.log(result.rows,result.rowCount);
+        console.log(result.rows, result.rowCount);
         res.status(201).json({
-            success:true,
-            message:"user inserted successfully",
-            data:result.rows[0]
+            success: true,
+            message: "user inserted successfully",
+            data: result.rows[0]
         })
-    }catch(err:any){
-        console.error("error adding user",err);
+    } catch (err: any) {
+        console.error("error adding user", err);
         res.status(500).json({
+            success: false,
+            message: err.detail || "internal server error"
+        })
+    }
+});
+
+app.get('/users', async (req: Request, res: Response) => {
+    try {
+        const users = await pool.query(`SELECT * FROM users`);
+
+        if (users.rowCount === 0) {
+            return res.status(404).json({
+                success: true,
+                message: "users not found",
+                data: []
+            })
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "users found",
+            data: users.rows
+        })
+    } catch (err: any) {
+        console.error("error getting users", err);
+        res.status(500).json({
+            success: false,
+            message: err.detail || 'internal server error'
+        })
+    }
+});
+
+app.get("/users/:id", async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const user = await pool.query(`SELECT * FROM users WHERE id = $1`,[id]);
+        console.log(user);
+
+        if(user.rowCount === 0){
+            return res.status(404).json({
             success:false,
+            message:"user not found",
+            data:{}
+        })
+        }
+
+        res.status(200).json({
+            success:true,
+            message:"user found",
+            data:user.rows[0]
+        })
+    } catch (err: any) {
+        console.error('error getting user', err);
+        res.status(500).json({
+            success: false,
             message: err.detail || "internal server error"
         })
     }
