@@ -3,6 +3,7 @@ import config from './config';
 import initDB from './config/db';
 import { userRoutes } from './modules/user/user.route';
 import { todoRoutes } from './modules/todos/todos.route';
+import { authRoutes } from './modules/auth/auth.route';
 
 const app = express()
 
@@ -29,7 +30,11 @@ app.use("/users",userRoutes)
 
 
 // todos
-app.use('/todos',todoRoutes)
+app.use('/todos',todoRoutes);
+
+
+// auth routes
+app.use("/auth",authRoutes);
 
 
 
