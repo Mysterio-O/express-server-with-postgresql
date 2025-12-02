@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { userServices } from "./user.service";
+import { todoServices } from "./todos.service";
 
-const createUser = async (req: Request, res: Response) => {
-    const { name, email } = req.body;
+const createTodo = async (req: Request, res: Response) => {
+    const { title, user_id } = req.body;
     try {
-        const result = await userServices.createUser(name, email)
+        const result = await todoServices.createTodos({ title, user_id })
 
         console.log(result.rows, result.rowCount);
 
@@ -30,53 +30,90 @@ const createUser = async (req: Request, res: Response) => {
     }
 };
 
-const getUser = async (req: Request, res: Response) => {
+const getTodos = async (req: Request, res: Response) => {
     try {
-        const users = await userServices.getUser();
+        const todos = await todoServices.getTodos();
 
-        if (users.rowCount === 0) {
+        if (todos.rowCount === 0) {
             return res.status(404).json({
                 success: true,
-                message: "users not found",
+                message: "todos not found",
                 data: []
             })
         }
 
         res.status(200).json({
             success: true,
-            count: users.rowCount,
-            message: "users found",
-            data: users.rows
+            message: "todos found",
+            data: todos.rows
         })
     } catch (err: any) {
-        console.error("error getting users", err);
+        console.error("error getting todos", err);
         res.status(500).json({
             success: false,
             message: err.detail || 'internal server error'
         })
     }
-}
+};
 
-
-const getSingleUser = async (req: Request, res: Response) => {
+const getSingleTodo = async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id) return;
     try {
-        const user = await userServices.getSingleUser(id)
-        console.log(user);
+        const todo = await todoServices.getSingleTodo(id)
+        console.log(todo);
 
-        if (user.rowCount === 0) {
+        if (todo.rowCount === 0) {
             return res.status(404).json({
                 success: false,
-                message: "user not found",
+                message: "todo not found",
                 data: {}
             })
         }
 
         res.status(200).json({
             success: true,
-            message: "user found",
-            data: user.rows[0]
+            message: "todo found",
+            data: todo.rows[0]
+        })
+    } catch (err: any) {
+        console.error('error getting todo', err);
+        res.status(500).json({
+            success: false,
+            message: err.detail || "internal server error"
+        })
+    }
+};
+
+const updateTodo = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { title, description } = req.body;
+
+    if (!id) return;
+
+    let data: any = {
+        id
+    }
+
+    if (title) data.title = title;
+    if (description) data.description = description;
+
+    try {
+        const todo = await todoServices.updateTodo(data)
+        console.log(todo);
+
+        if (todo.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "todo not found",
+                data: {}
+            })
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "todo updated",
+            data: todo.rows[0]
         })
     } catch (err: any) {
         console.error('error getting user', err);
@@ -87,62 +124,28 @@ const getSingleUser = async (req: Request, res: Response) => {
     }
 };
 
-
-const updateUser = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { name, email } = req.body;
-
-    if (!id || !email || !name) return;
-
-    try {
-        const user = await userServices.updateUser({ name, email, id })
-        console.log(user);
-
-        if (user.rowCount === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "user not found",
-                data: {}
-            })
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "user updated",
-            data: user.rows[0]
-        })
-    } catch (err: any) {
-        console.error('error getting user', err);
-        res.status(500).json({
-            success: false,
-            message: err.detail || "internal server error"
-        })
-    }
-};
-
-
-const deleteUser = async (req: Request, res: Response) => {
+const deleteTodo = async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id) return;
     try {
-        const user = await userServices.deleteUser(id)
-        console.log(user);
+        const todo = await todoServices.deleteTodo(id);
+        console.log(todo);
 
-        if (user.rowCount === 0) {
+        if (todo.rowCount === 0) {
             return res.status(404).json({
                 success: false,
-                message: "user not found",
+                message: "todo not found",
                 data: {}
             })
         }
 
         res.status(200).json({
             success: true,
-            message: "user deleted",
+            message: "todo deleted",
             data: null
         })
     } catch (err: any) {
-        console.error('error getting user', err);
+        console.error('error getting todo', err);
         res.status(500).json({
             success: false,
             message: err.detail || "internal server error"
@@ -150,10 +153,11 @@ const deleteUser = async (req: Request, res: Response) => {
     }
 }
 
-export const userControllers = {
-    createUser,
-    getUser,
-    getSingleUser,
-    updateUser,
-    deleteUser
+
+export const todoControllers = {
+    createTodo,
+    getTodos,
+    getSingleTodo,
+    updateTodo,
+    deleteTodo
 }
