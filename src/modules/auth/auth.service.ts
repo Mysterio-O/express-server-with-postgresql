@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import config from "../../config";
 
 const loginUser = async ({ email, password }: { email: string, password: string }) => {
-    console.log('from services',email,password)
+    // console.log('from services',email,password)
     const result = await pool.query(`
         SELECT * FROM users WHERE email=$1
         `, [email]);
@@ -22,7 +22,7 @@ const loginUser = async ({ email, password }: { email: string, password: string 
     };
 
 
-    const token = jwt.sign({ name: user.name, email: user.email }, config.jwt_secret as string, {
+    const token = jwt.sign({ name: user.name, email: user.email, role:user.role }, config.jwt_secret as string, {
         expiresIn: "7d"
     });
 
